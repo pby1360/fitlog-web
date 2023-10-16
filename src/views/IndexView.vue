@@ -1,6 +1,6 @@
 <template>
   <header>
-    <p class="logo">fitlog</p>
+    <p class="logo"><router-link to="/">fitlog</router-link></p>
     <div class="wrapper">
       <nav>
         <RouterLink to="/">Home</RouterLink>
@@ -33,17 +33,25 @@ header {
 
 .logo {
   display: block;
-  margin: 0 auto 2rem;
+  margin: 2rem 0;
   text-align: center;
-  font-size: xx-large;
-  font-weight: bold;
+  font-size: 2.5rem;
+
+  a {
+    color: black;
+    font-weight: bold;
+  }
 }
 
 nav {
   width: 100%;
-  font-size: 12px;
+  font-size: 1.1rem;
   text-align: center;
   margin-top: 2rem;
+  
+  a {
+    text-decoration: none;
+  }
 }
 
 nav a.router-link-exact-active {

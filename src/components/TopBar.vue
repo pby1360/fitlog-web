@@ -2,19 +2,29 @@
   <div class="topbar">
     <div class="logo">fitlog</div>
     <div class="buttons">
-      <button><router-link to="/">logout</router-link></button>
+      <button @click="logout">logout</button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useRouter } from 'vue-router';
+
+
+const router = useRouter();
+
+const logout = () => {
+  localStorage.removeItem('auth');
+  router.replace('/');
+}
 
 </script>
 
 <style lang="scss" scoped>
 .topbar {
   display: flex;
-  margin: 1rem;
+  // margin: 1rem;
+  padding: 0.25rem 1rem;
   
   .logo {
     flex: 1;
