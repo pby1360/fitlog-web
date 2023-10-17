@@ -4,8 +4,18 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 
-const app = createApp(App)
+import vuetify from './plugins/vuetify';
+import store from '@/store/store.js';
 
-app.use(router)
+import { loadFonts } from './plugins/webfontloader'
+loadFonts();
 
-app.mount('#app')
+const app = createApp(App);
+
+app.config.globalProperties.store = store;
+
+app.use(router);
+app.use(vuetify);
+app.use(store);
+
+app.mount('#app');

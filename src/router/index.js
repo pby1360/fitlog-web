@@ -23,17 +23,33 @@ const router = createRouter({
           path: '/sign-in',
           name: 'signIn',
           component: () => import('../views/SignIn.vue')
-        }
+        }        
       ],
     },
     {
       path: '/main',
       name: 'main',
       meta: {
-        isLoggedIn: true,
+        loginRequired: true,
       },
       component: () => import('../views/MainView.vue')
     },
+    {
+      path: '/workout-program',
+      name: 'workoutProgram',
+      meta: {
+        loginRequired: true,
+      },
+      component: () => import('../views/workout/WorkoutProgram.vue')
+    },
+    {
+      path: '/workout-space',
+      name: 'workoutSpace',
+      meta: {
+        loginRequired: true,
+      },
+      component: () => import('../views/workout/WorkoutSpace.vue')
+    }
   ]
 })
 

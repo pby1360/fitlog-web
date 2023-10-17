@@ -2,20 +2,36 @@
   <div>
     <TopBar v-if="isLoggedIn"></TopBar>
     <RouterView />
+    <v-overlay
+      :model-value="isLoading"
+      class="align-center justify-center"
+    >
+      <v-progress-circular
+        color="primary"
+        indeterminate
+        size="64"
+      ></v-progress-circular>
+    </v-overlay>
   </div>
 </template>
 
 <script setup>
 import { RouterView, useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue';
+import { useStore } from "vuex";
+
 import TopBar from './components/TopBar.vue';
-import { onMounted, ref, watch } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
+const store = useStore();
 const isLoggedIn = ref(false);
+
+const isLoading = computed(() => store.getters.isLoading);
+
 watch(
   route, (value) => {
-    value.meta.isLoggedIn ? isLoggedIn.value = true : isLoggedIn.value = false;
+    value.meta.loginRequired ? isLoggedIn.value = true : isLoggedIn.value = false;
   },
   { immediate: true }
 );

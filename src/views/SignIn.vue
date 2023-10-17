@@ -15,11 +15,11 @@
 import axios from 'axios';
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-// import { useStore } from 'vuex';
+import { useStore } from 'vuex';
 
 const route = useRoute();
 const router = useRouter();
-// const store = useStore();
+const store = useStore();
 
 const baseURL = import.meta.env.VITE_BASE_URL;
 const clientURL = import.meta.env.VITE_CLIENT_URL;
@@ -44,19 +44,20 @@ const googleLogin = () => {
 }
 
 const loginWithGoogle = async (code)  => {
-  // store.commit('setLoading', true);
+  store.commit('setLoading', true);
   await axios.get(`${baseURL}/auth/google-login?code=${code}`)
   .then(response => {
     const jsonStr = JSON.stringify(response.data);
     localStorage.setItem('auth', jsonStr);
     localStorage.setItem('profile_image', response.data.image);
-    // store.commit('setUser', response.data);
+    store.commit('setUser', response.data);
     // store.commit('setLogin', true);
     router.push('/main');
   }).catch(error => {
-    console.log(error);
+    console.error(error);
+    alert('통신 오류');
   })
-  // .finally(() => store.commit('setLoading', false));
+  .finally(() => store.commit('setLoading', false));
 }
 
 const loginWithKakao = () => {
