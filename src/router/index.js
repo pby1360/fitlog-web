@@ -35,12 +35,20 @@ const router = createRouter({
       component: () => import('../views/MainView.vue')
     },
     {
+      path: '/workout-master',
+      name: 'workoutMaster',
+      meta: {
+        loginRequired: true,
+      },
+      component: () => import('../views/workout/master/workoutMaster.vue')
+    },
+    {
       path: '/workout-program',
       name: 'workoutProgram',
       meta: {
         loginRequired: true,
       },
-      component: () => import('../views/workout/WorkoutProgram.vue')
+      component: () => import('../views/workout/program/workoutProgram.vue')
     },
     {
       path: '/workout-space',
@@ -48,7 +56,7 @@ const router = createRouter({
       meta: {
         loginRequired: true,
       },
-      component: () => import('../views/workout/WorkoutSpace.vue')
+      component: () => import('../views/workout/space/WorkoutSpace.vue')
     }
   ]
 })

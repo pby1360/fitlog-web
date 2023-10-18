@@ -53,13 +53,13 @@ const checkToken = () => {
     } else if (isIndexPage(route.name)) {
       router.replace('/main');
     }
-  } else if (!isIndexPage(route.name)) {
+  } else if (isIndexPage(route.name)) {
     router.replace('/');
   }
 }
 
 const isIndexPage = (name) => {
-  return name !== 'home' || route.name !== 'about' || route.name !== 'signIn';
+  return name == 'home' || route.name == 'about' || route.name == 'signIn';
 }
 </script>
 

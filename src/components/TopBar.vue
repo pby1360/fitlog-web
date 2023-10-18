@@ -8,7 +8,7 @@
         </template>
         <v-app-bar-title><div class="logo">fitlog</div></v-app-bar-title>
         <template v-slot:append>
-          <v-btn variant="tonal"  color="indigo" @click="logout">logout</v-btn>
+          <v-btn variant="tonal" color="indigo" @click="logout">logout</v-btn>
         </template>
       </v-app-bar>
       <v-main>
@@ -35,7 +35,15 @@ const isShowMenu = ref(false);
 
 const items = [
   {
-    title: 'Programs',
+    title: 'Main',
+    value: '/main',
+  },
+  {
+    title: 'Master',
+    value: '/workout-master',
+  },
+  {
+    title: 'Program',
     value: '/workout-program',
   },
   {
@@ -51,6 +59,7 @@ const logout = () => {
 
 const selectItem = (value) => {
   router.push(value);
+  isShowMenu.value = false;
 }
 
 </script>
