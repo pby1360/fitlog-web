@@ -75,9 +75,8 @@ const loginWithNaver = () => {
 
   .login-box {
     width: 20rem;
-    // height: 20rem;
-    // min-height: 15rem;
     border: solid 1px #c8c8c8;
+    box-shadow: 2px 2px 3px #CCCCFF;
     position: absolute;
     left: 50%;
     top: 50%;

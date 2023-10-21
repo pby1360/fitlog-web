@@ -7,7 +7,7 @@
         <div class="item-wrapper">
           <div class="item"><span class="text">광배근</span></div>
           <div class="item"><span class="text">대흉근</span></div>
-          <div class="item add"><v-icon class="text" icon="mdi-plus"></v-icon></div>
+          <v-btn class="item add" @click="showAddPart = true"><v-icon class="text" icon="mdi-plus"></v-icon></v-btn>
         </div>
       </div>
       <div class="box">
@@ -20,10 +20,32 @@
         </div>
       </div>
     </div>
+    <v-dialog
+      v-model="showAddPart"
+      width="400"
+    >
+      <v-card>
+        <v-card-title>Add Part</v-card-title>
+        <v-card-subtitle>Please enter the workout part</v-card-subtitle>
+        <v-card-text>
+          <v-text-field label="Name"></v-text-field>
+          <v-text-field label="Description"></v-text-field>
+        </v-card-text>
+        <v-card-actions style="display: flex;">
+          <v-btn style="flex:1;" variant="flat" color="#CCCCFF">save</v-btn>
+          <v-btn style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
+
+
+const showAddPart = ref(false);
+const showAddItem = ref(false);
 
 </script>
 
@@ -46,6 +68,7 @@
       min-width: 15rem;
       width: 25rem;
       border-radius: 5px;
+      // box-shadow: 2px 2px 3px #ccccff;
 
       .box-title {
         font-weight: bold;
