@@ -6,15 +6,15 @@ export default createStore({
   state: {
     // isLoggedIn: false,
     isLoading: false,
-    // user: {},
+    user: {},
   },
   getters: {
     // isLogin(state) {
     //   return state.isLoggedIn;
     // },
-    // getUser(state) {
-    //   return state.user;
-    // },
+    getUser(state) {
+      return state.user;
+    },
     isLoading(state) {
       return state.isLoading;
     },
@@ -23,9 +23,9 @@ export default createStore({
     // setLogin(state, value) {
     //   state.isLoggedIn = value;
     // },
-    // setUser(state, value) {
-    //   state.user = value;
-    // },
+    setUser(state, value) {
+      state.user = value;
+    },
     setLoading(state, value) {
       state.isLoading = value;
     }

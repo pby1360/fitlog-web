@@ -50,8 +50,11 @@ const checkToken = () => {
         alert('토큰 만료');
         router.replace('/');
       }
-    } else if (isIndexPage(route.name)) {
-      router.replace('/main');
+    } else {
+      if (isIndexPage(route.name)) {
+        router.replace('/main');
+      }
+      store.commit('setUser', auth);
     }
   } else if (isIndexPage(route.name)) {
     router.replace('/');

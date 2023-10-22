@@ -16,9 +16,10 @@
           v-model="isShowMenu"
           location="top"
           temporary
+          class="menu-list"
         >
           <template v-for="item in items" :key="item.title">
-            <v-list-item @click="selectItem(item.value)">{{ item.title }}</v-list-item>
+            <v-list-item @click="selectItem(item.value)" :class="item.value == selectedMenu ? 'selected' : ''">{{ item.title }}</v-list-item>
           </template>
         </v-navigation-drawer>
       </v-main>
@@ -26,12 +27,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { computed, ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { useStore } from "vuex";
 
 const router = useRouter();
+const route = useRoute();
+const store = useStore();
 
 const isShowMenu = ref(false);
+const selectedMenu = computed(() => route.path);
 
 const items = [
   {
@@ -54,6 +59,9 @@ const items = [
 
 const logout = () => {
   localStorage.removeItem('auth');
+  localStorage.removeItem('profile_image');
+  // store.commit('setLogin', !isLoggedin);
+  store.commit('setUser', {});
   router.replace('/');
 }
 
@@ -89,4 +97,9 @@ const selectItem = (value) => {
   }
 }
 
+.menu-list {
+  .v-list-item.selected {
+    background-color: #CCCCFF;
+  }
+}
 </style>
