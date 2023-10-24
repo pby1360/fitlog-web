@@ -14,7 +14,7 @@
           <div class="item" v-for="part in partList" :key="part.id">
             <span class="text">{{ part.name }}</span>
             <div class="buttons">
-              <v-btn variant="outlined"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
+              <v-btn variant="outlined" @click="getPartDetail(part.id)"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
               <v-btn variant="outlined" color="red"><v-icon class="text" icon="mdi-delete-outline"></v-icon></v-btn>
             </div>
           </div>
@@ -43,6 +43,26 @@
         <v-card-actions style="display: flex;">
           <v-btn style="flex:1;" variant="flat" color="#CCCCFF" @click="addPart">save</v-btn>
           <v-btn @click="showAddPart = false" style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="showPartDetail"
+      width="400"
+    >
+      <v-card>
+        <v-card-title>Part detail</v-card-title>
+        <!-- <v-card-subtitle>Please enter the workout part</v-card-subtitle> -->
+        <v-card-text>
+          <v-text-field v-model="partDetail.name" label="Name"></v-text-field>
+          <v-text-field v-model="partDetail.description" label="Description"></v-text-field>
+          <v-text-field v-model="partDetail.memo" label="Memo"></v-text-field>
+          <v-text-field v-model="partDetail.createdDate" label="Created date"></v-text-field>
+          <v-text-field v-model="partDetail.createdDate" label="Modified date"></v-text-field>
+        </v-card-text>
+        <v-card-actions style="display: flex;">
+          <v-btn style="flex:1;" variant="flat" color="#CCCCFF" @click="modifyPart">save</v-btn>
+          <v-btn @click="showPartDetail = false" style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -76,9 +96,11 @@ const store = useStore();
 
 const showAddPart = ref(false);
 const showAddItem = ref(false);
+const showPartDetail = ref(false);
 
 const partList = ref([]);
 const newPart = ref({});
+const partDetail = ref({});
 
 onMounted(() => {
   store.commit('setLoading', true);
@@ -111,6 +133,20 @@ const addPart = async () => {
   .catch((error) => alert('저장 실패!'))
   .finally(() => store.commit('setLoading', false));
 }
+
+const getPartDetail = async (partId) => {
+  store.commit('setLoading', true);
+  const user = store.getters.getUser;
+  await axios.get(`/api/workout-master/${user.id}/parts/${partId}`)
+  .then(response => {
+    partDetail.value = response.data;
+    showPartDetail.value = true;
+  })
+  .catch((error) => alert('조회 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const modifyPart = async () => {}
 
 </script>
 
