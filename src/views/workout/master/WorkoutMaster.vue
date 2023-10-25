@@ -11,11 +11,11 @@
           <v-btn class="button-add" variant="tonal" color="info" @click="showAddPart = true">Add</v-btn>
         </div>
         <div class="item-wrapper">
-          <div class="item" v-for="part in partList" :key="part.id">
+          <div class="item" v-for="part in partList" :key="part.id" @click="selectPart(part.id)" :class="selectedPart == part.id ? 'selected' : ''">
             <span class="text">{{ part.name }}</span>
             <div class="buttons">
               <v-btn variant="outlined" @click="getPartDetail(part.id)"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
-              <v-btn variant="outlined" color="red"><v-icon class="text" icon="mdi-delete-outline"></v-icon></v-btn>
+              <v-btn variant="outlined" color="red"><v-icon class="text" icon="mdi-delete-outline" @click="deletePart(part.id)"></v-icon></v-btn>
             </div>
           </div>
         </div>
@@ -23,9 +23,22 @@
       <div class="box">
         <div class="box-title">
           <p class="title">Item</p>
-          <v-btn class="button-add" variant="tonal" color="info" @click="showAddItem = true">Add</v-btn>
+          <v-btn v-if="selectedPart" class="button-add" variant="tonal" color="info" @click="showAddItem = true">Add</v-btn>
         </div>
-        <div class="item-wrapper">
+        <div v-if="selectedPart && itemList.length > 0" class="item-wrapper">
+          <div class="item" v-for="item in itemList" :key="item.id">
+            <span class="text">{{ item.name }}</span>
+            <div class="buttons">
+              <v-btn variant="outlined" @click="getItemDetail(item.id)"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
+              <v-btn variant="outlined" color="red"><v-icon class="text" icon="mdi-delete-outline" @click="deleteItem(item.id)"></v-icon></v-btn>
+            </div>
+          </div>
+        </div>
+        <div v-if="selectedPart && itemList.length == 0" class="item-wrapper">
+          No item
+        </div>
+        <div v-else-if="!selectedPart && itemList.length == 0" class="item-wrapper">
+          Please select a Part
         </div>
       </div>
     </div>
@@ -56,9 +69,9 @@
         <v-card-text>
           <v-text-field v-model="partDetail.name" label="Name"></v-text-field>
           <v-text-field v-model="partDetail.description" label="Description"></v-text-field>
-          <v-text-field v-model="partDetail.memo" label="Memo"></v-text-field>
-          <v-text-field v-model="partDetail.createdDate" label="Created date"></v-text-field>
-          <v-text-field v-model="partDetail.createdDate" label="Modified date"></v-text-field>
+          <v-text-field readonly v-model="partDetail.createdDate" label="Created date"></v-text-field>
+          <v-text-field readonly v-model="partDetail.modifiedDate" label="Modified date"></v-text-field>
+          <v-textarea v-model="partDetail.memo" label="Memo"></v-textarea>
         </v-card-text>
         <v-card-actions style="display: flex;">
           <v-btn style="flex:1;" variant="flat" color="#CCCCFF" @click="modifyPart">save</v-btn>
@@ -75,11 +88,11 @@
         <v-card-subtitle>Please enter the workout item</v-card-subtitle>
         <v-card-text>
           <v-text-field readonly label="Part"></v-text-field>
-          <v-text-field label="Name"></v-text-field>
-          <v-text-field label="Description"></v-text-field>
+          <v-text-field v-model="newItem.name" label="Name"></v-text-field>
+          <v-text-field v-model="newItem.description" label="Description"></v-text-field>
         </v-card-text>
         <v-card-actions style="display: flex;">
-          <v-btn style="flex:1;" variant="flat" color="#CCCCFF">save</v-btn>
+          <v-btn @click="addItem" style="flex:1;" variant="flat" color="#CCCCFF">save</v-btn>
           <v-btn @click="showAddItem = false" style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
         </v-card-actions>
       </v-card>
@@ -102,6 +115,12 @@ const partList = ref([]);
 const newPart = ref({});
 const partDetail = ref({});
 
+const selectedPart = ref();
+const itemList = ref([]);
+const newItem = ref({});
+
+const user = store.getters.getUser;
+
 onMounted(() => {
   store.commit('setLoading', true);
   Promise.all([getPartList]).finally(() => store.commit('setLoading', false));
@@ -109,7 +128,6 @@ onMounted(() => {
 });
 
 const getPartList = async () => {  
-  const user = store.getters.getUser;
   await axios.get(`/api/workout-master/${user.id}/parts`)
   .then(response => {
     partList.value = response.data;
@@ -122,7 +140,6 @@ const addPart = async () => {
     return;
   }
   store.commit('setLoading', true);
-  const user = store.getters.getUser;
   newPart.value.userId = user.id;
   await axios.post(`/api/workout-master/${user.id}/parts`, newPart.value)
   .then(response => {
@@ -136,7 +153,6 @@ const addPart = async () => {
 
 const getPartDetail = async (partId) => {
   store.commit('setLoading', true);
-  const user = store.getters.getUser;
   await axios.get(`/api/workout-master/${user.id}/parts/${partId}`)
   .then(response => {
     partDetail.value = response.data;
@@ -146,7 +162,106 @@ const getPartDetail = async (partId) => {
   .finally(() => store.commit('setLoading', false));
 }
 
-const modifyPart = async () => {}
+const modifyPart = async () => {
+  if (!partDetail.value.name) {
+    alert('please enter name');
+    return;
+  }
+  store.commit('setLoading', true);
+  partDetail.value.userId = user.id;
+  await axios.put(`/api/workout-master/${user.id}/parts`, partDetail.value)
+  .then(response => {
+    showPartDetail.value = false;
+    partDetail.value = {};
+    getPartList();
+  })
+  .catch((error) => alert('수정 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const deletePart = async (partId) => {  
+  if (!confirm("Delete it?")) {
+    return;
+  }
+  store.commit('setLoading', true);
+  await axios.delete(`/api/workout-master/${user.id}/parts/${partId}`)
+  .then(() => {
+    alert('삭제 성공!');
+    getPartList();
+  })
+  .catch((error) => alert('삭제 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const selectPart = async (partId) => {
+  selectedPart.value = partId;
+  store.commit('setLoading', true);
+  await axios.get(`/api/workout-master/${user.id}/parts/${partId}/items`)
+  .then(response => {
+    itemList.value = response.data.items;
+  })
+  .catch((error) => alert('조회 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const addItem = async () => {
+  if (!newItem.value.name) {
+    alert('please enter name');
+    return;
+  }
+  store.commit('setLoading', true);
+  newItem.value.workoutPartId = selectedPart.value;
+  await axios.post(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items`, newItem.value)
+  .then(response => {
+    newItem.value = {};
+    showAddItem.value = false;
+    selectPart(selectedPart.value);
+  })
+  .catch((error) => alert('저장 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const getItemDetail = async (itemId) => {
+  store.commit('setLoading', true);
+  await axios.get(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items/${itemId}`)
+  .then(response => {
+    partDetail.value = response.data;
+    showPartDetail.value = true;
+  })
+  .catch((error) => alert('조회 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const modifyItem = async () => {
+  if (!partDetail.value.name) {
+    alert('please enter name');
+    return;
+  }
+  store.commit('setLoading', true);
+  partDetail.value.userId = user.id;
+  await axios.put(`/api/workout-master/${user.id}/parts`, partDetail.value)
+  .then(response => {
+    showPartDetail.value = false;
+    partDetail.value = {};
+    getPartList();
+  })
+  .catch((error) => alert('수정 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const deleteItem = async (itemId) => {  
+  if (!confirm("Delete it?")) {
+    return;
+  }
+  store.commit('setLoading', true);
+  await axios.delete(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items/${itemId}`)
+  .then(() => {
+    alert('삭제 성공!');
+    getPartList();
+  })
+  .catch((error) => alert('삭제 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
 
 </script>
 
@@ -217,6 +332,11 @@ const modifyPart = async () => {}
               margin-left: 0.25rem;
               background-color: #fff;
             }
+          }
+
+          &.selected {
+            border: solid 2px #c8c8c8;
+            background-color: #CCCCFF;
           }
         }
       }
