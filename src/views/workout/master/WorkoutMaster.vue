@@ -11,7 +11,7 @@
           <v-btn class="button-add" variant="tonal" color="info" @click="showAddPart = true">Add</v-btn>
         </div>
         <div class="item-wrapper">
-          <div class="item" v-for="part in partList" :key="part.id" @click="selectPart(part.id)" :class="selectedPart == part.id ? 'selected' : ''">
+          <div class="item" v-for="part in partList" :key="part.id" @click="selectPart(part)" :class="selectedPart.id == part.id ? 'selected' : ''">
             <span class="text">{{ part.name }}</span>
             <div class="buttons">
               <v-btn variant="outlined" @click="getPartDetail(part.id)"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
@@ -23,9 +23,9 @@
       <div class="box">
         <div class="box-title">
           <p class="title">Item</p>
-          <v-btn v-if="selectedPart" class="button-add" variant="tonal" color="info" @click="showAddItem = true">Add</v-btn>
+          <v-btn v-if="selectedPart.id" class="button-add" variant="tonal" color="info" @click="showAddItem = true">Add</v-btn>
         </div>
-        <div v-if="selectedPart && itemList.length > 0" class="item-wrapper">
+        <div v-if="selectedPart.id && itemList.length > 0" class="item-wrapper">
           <div class="item" v-for="item in itemList" :key="item.id">
             <span class="text">{{ item.name }}</span>
             <div class="buttons">
@@ -34,10 +34,10 @@
             </div>
           </div>
         </div>
-        <div v-if="selectedPart && itemList.length == 0" class="item-wrapper">
+        <div v-if="selectedPart.id && itemList.length == 0" class="item-wrapper">
           No item
         </div>
-        <div v-else-if="!selectedPart && itemList.length == 0" class="item-wrapper">
+        <div v-else-if="!selectedPart.id && itemList.length == 0" class="item-wrapper">
           Please select a Part
         </div>
       </div>
@@ -87,13 +87,33 @@
         <v-card-title>Add Item</v-card-title>
         <v-card-subtitle>Please enter the workout item</v-card-subtitle>
         <v-card-text>
-          <v-text-field readonly label="Part"></v-text-field>
+          <v-text-field readonly label="Part" v-model="selectedPart.name"></v-text-field>
           <v-text-field v-model="newItem.name" label="Name"></v-text-field>
           <v-text-field v-model="newItem.description" label="Description"></v-text-field>
         </v-card-text>
         <v-card-actions style="display: flex;">
           <v-btn @click="addItem" style="flex:1;" variant="flat" color="#CCCCFF">save</v-btn>
           <v-btn @click="showAddItem = false" style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-dialog
+      v-model="showItemDetail"
+      width="400"
+    >
+      <v-card>
+        <v-card-title>Item detail</v-card-title>
+        <v-card-text>
+          <v-text-field readonly v-model="selectedPart.name" label="Part"></v-text-field>
+          <v-text-field v-model="itemDetail.name" label="Name"></v-text-field>
+          <v-text-field v-model="itemDetail.description" label="Description"></v-text-field>
+          <v-text-field readonly v-model="itemDetail.createdDate" label="Created date"></v-text-field>
+          <v-text-field readonly v-model="itemDetail.modifiedDate" label="Modified date"></v-text-field>
+          <v-textarea v-model="itemDetail.memo" label="Memo"></v-textarea>
+        </v-card-text>
+        <v-card-actions style="display: flex;">
+          <v-btn style="flex:1;" variant="flat" color="#CCCCFF" @click="modifyItem">save</v-btn>
+          <v-btn @click="showItemDetail = false" style="flex:1;" variant="flat" color="#e8e8e8">cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -110,14 +130,16 @@ const store = useStore();
 const showAddPart = ref(false);
 const showAddItem = ref(false);
 const showPartDetail = ref(false);
+const showItemDetail = ref(false);
 
 const partList = ref([]);
 const newPart = ref({});
 const partDetail = ref({});
+const selectedPart = ref({});
 
-const selectedPart = ref();
 const itemList = ref([]);
 const newItem = ref({});
+const itemDetail = ref({});
 
 const user = store.getters.getUser;
 
@@ -193,10 +215,10 @@ const deletePart = async (partId) => {
   .finally(() => store.commit('setLoading', false));
 }
 
-const selectPart = async (partId) => {
-  selectedPart.value = partId;
+const selectPart = async (part) => {
+  selectedPart.value = part;
   store.commit('setLoading', true);
-  await axios.get(`/api/workout-master/${user.id}/parts/${partId}/items`)
+  await axios.get(`/api/workout-master/${user.id}/parts/${selectedPart.value.id}/items`)
   .then(response => {
     itemList.value = response.data.items;
   })
@@ -210,8 +232,8 @@ const addItem = async () => {
     return;
   }
   store.commit('setLoading', true);
-  newItem.value.workoutPartId = selectedPart.value;
-  await axios.post(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items`, newItem.value)
+  newItem.value.workoutPartId = selectedPart.value.id;
+  await axios.post(`/api/workout-master/${user.id}/parts/${selectedPart.value.id}/items`, newItem.value)
   .then(response => {
     newItem.value = {};
     showAddItem.value = false;
@@ -223,26 +245,25 @@ const addItem = async () => {
 
 const getItemDetail = async (itemId) => {
   store.commit('setLoading', true);
-  await axios.get(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items/${itemId}`)
+  await axios.get(`/api/workout-master/${user.id}/parts/${selectedPart.value.id}/items/${itemId}`)
   .then(response => {
-    partDetail.value = response.data;
-    showPartDetail.value = true;
+    itemDetail.value = response.data;
+    showItemDetail.value = true;
   })
   .catch((error) => alert('조회 실패!'))
   .finally(() => store.commit('setLoading', false));
 }
 
 const modifyItem = async () => {
-  if (!partDetail.value.name) {
+  if (!itemDetail.value.name) {
     alert('please enter name');
     return;
   }
   store.commit('setLoading', true);
-  partDetail.value.userId = user.id;
-  await axios.put(`/api/workout-master/${user.id}/parts`, partDetail.value)
+  await axios.put(`/api/workout-master/${user.id}/parts/${selectedPart.value.id}/items/${itemDetail.value.id}`, itemDetail.value)
   .then(response => {
-    showPartDetail.value = false;
-    partDetail.value = {};
+    showItemDetail.value = false;
+    itemDetail.value = {};
     getPartList();
   })
   .catch((error) => alert('수정 실패!'))
@@ -254,10 +275,10 @@ const deleteItem = async (itemId) => {
     return;
   }
   store.commit('setLoading', true);
-  await axios.delete(`/api/workout-master/${user.id}/parts/${selectedPart.value}/items/${itemId}`)
+  await axios.delete(`/api/workout-master/${user.id}/parts/${selectedPart.value.id}/items/${itemId}`)
   .then(() => {
     alert('삭제 성공!');
-    getPartList();
+    selectPart(selectedPart.value);
   })
   .catch((error) => alert('삭제 실패!'))
   .finally(() => store.commit('setLoading', false));
