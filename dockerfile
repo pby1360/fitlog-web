@@ -1,11 +1,22 @@
-FROM node:18.16
-WORKDIR C:\Users\user\project\fitlog-web
+FROM node:lts-alpine as build
+WORKDIR /app
 
-COPY package.json .
+COPY package.json ./
 
-ADD . .
 RUN npm install
 
-EXPOSE 3000
+COPY . .
 
-CMD ["npm", "start"]
+RUN npm run build
+
+FROM nginx:stable-alpine
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+COPY nginx.conf /etc/nginx/conf.d
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
