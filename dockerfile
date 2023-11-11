@@ -1,4 +1,4 @@
-FROM node:lts-alpine as build
+FROM node:18.16 as build
 WORKDIR /app
 
 COPY package.json ./
