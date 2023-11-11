@@ -1,14 +1,14 @@
-import './assets/main.css'
+import '@/assets/main.css'
 
 import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+import App from '@/App.vue'
+import router from '@/router'
 
-import vuetify from './plugins/vuetify';
+import vuetify from '@/plugins/vuetify';
 import store from '@/store/store.js';
 
-import { loadFonts } from './plugins/webfontloader'
-import axios from './components/Instance';
+import { loadFonts } from '@/plugins/webfontloader'
+import axios from '@/components/Instance';
 
 loadFonts();
 
