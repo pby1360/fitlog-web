@@ -29,7 +29,7 @@ instance.interceptors.response.use(
       store.commit('setLogin', false);
       localStorage.removeItem('auth');
 
-      location.replace('/login');
+      location.replace('/sign-in');
       return;
     }
     return Promise.reject(error);

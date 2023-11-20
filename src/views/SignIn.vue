@@ -25,7 +25,7 @@ const baseURL = import.meta.env.VITE_BASE_URL;
 const clientURL = import.meta.env.VITE_CLIENT_URL;
 const redirectURI = `${clientURL}/sign-in`;
 
-const GOOGLE_CLIENT_ID = '676639504875-a0lpq23f7nvdnj3n4tojeh7mqc339jfg.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '759530149928-f00enmm1gc7gorf6116nop89253tokk4.apps.googleusercontent.com';
 
 onMounted(() => {
   if (route.query.code) {
