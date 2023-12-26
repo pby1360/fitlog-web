@@ -3,7 +3,7 @@
     <div class="title-bar">
       <p>Programs</p>
       <div class="buttons">
-        <v-btn variant="tonal" color="black" @click="showAddProgram = true">Add</v-btn>
+        <v-btn variant="tonal" color="info" @click="showAddProgram = true">Add</v-btn>
       </div>
     </div>
       <div class="box">
@@ -12,8 +12,8 @@
             <span class="text">{{ program.name }}</span>
             <div class="buttons">
               <v-btn variant="outlined" @click="getProgramDetail(program.id)"><v-icon class="text" icon="mdi-magnify"></v-icon></v-btn>
-              <v-btn variant="outlined" @click="router"><v-icon class="text" icon="mdi-format-list-bulleted"></v-icon></v-btn>
-              <v-btn variant="outlined" color="red"><v-icon class="text" icon="mdi-delete-outline" @click="deleteProgram(program.id)"></v-icon></v-btn>
+              <v-btn variant="outlined" @click="router.push(`/workout-program/${program.id}/parts`)"><v-icon class="text" icon="mdi-format-list-bulleted"></v-icon></v-btn>
+              <v-btn variant="outlined" @click="deleteProgram(program.id)" color="red"><v-icon class="text" icon="mdi-delete-outline"></v-icon></v-btn>
             </div>
           </div>
         </div>
@@ -63,6 +63,7 @@
 <script setup>
 import { onMounted, ref, getCurrentInstance } from "vue";
 import { useStore } from "vuex";
+import router from "../../../router";
 
 const axios = getCurrentInstance().proxy.axios;
 const store = useStore();

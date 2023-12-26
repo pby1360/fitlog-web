@@ -51,6 +51,15 @@ const router = createRouter({
       component: () => import('@/views/workout/program/WorkoutProgram.vue')
     },
     {
+      path: '/workout-program/:programId/parts',
+      name: 'workoutProgramPart',
+      meta: {
+        loginRequired: true,
+      },
+      props: true,
+      component: () => import('@/views/workout/program/workoutProgramPart.vue')
+    },
+    {
       path: '/workout-space',
       name: 'workoutSpace',
       meta: {
