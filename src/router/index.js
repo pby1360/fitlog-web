@@ -60,6 +60,15 @@ const router = createRouter({
       component: () => import('@/views/workout/program/workoutProgramPart.vue')
     },
     {
+      path: '/workout-program/:programId/parts/:partId/items/:itemId/sets',
+      name: 'workoutProgramPartItemSet',
+      meta: {
+        loginRequired: true,
+      },
+      props: true,
+      component: () => import('@/views/workout/program/workoutProgramPartItemSet.vue')
+    },
+    {
       path: '/workout-space',
       name: 'workoutSpace',
       meta: {
