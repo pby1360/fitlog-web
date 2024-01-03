@@ -1,25 +1,47 @@
 <template>
   <CommonLayout :title="title" :double="true">
     <template #box1>
-      <div class="box-container">
+      <div v-show="!isOrderMode" class="box-container">
         <div class="box-header">
           <p class="title">Sets</p>
           <div class="buttons">
             <v-btn @click="showProgramPartItemSetAdd = true">Add</v-btn>
+            <v-btn :disabled="programPartItemSetList.length < 2" color="purple-lighten-4" @click="isOrderMode = true">Order</v-btn>
           </div>
         </div>
         <div class="box-content">
           <div v-if="programPartItemSetList.length > 0" class="item-wrapper">
             <div class="item" :class="selectedSet.id == set.id ? 'selected' : null" v-for="set in programPartItemSetList" :key="set.id" @click="selectSet(set)">
-              <span class="text">{{ set.order }}</span>
+              <span class="number">{{ set.order }}</span>
               <span class="text">{{ set.description }}</span>
               <div class="buttons">
-                <!-- <v-btn variant="outlined" @click="deleteProgramPart(part.id)" color="red"><v-icon class="text" icon="mdi-delete-outline"></v-icon></v-btn> -->
+                <v-btn variant="outlined" @click="deleteSet(set.id)" color="red"><v-icon class="text" icon="mdi-delete-outline"></v-icon></v-btn>
               </div>
             </div>
           </div>
           <div v-else class="item-wrapper">
             No sets.
+          </div>
+        </div>
+      </div>
+      <div v-show="isOrderMode" class="box-container">
+        <div class="box-header">
+          <p class="title">Sets</p>
+          <div class="buttons">
+            <v-btn variant="outlined" color="success" @click="saveSetOrder">Save</v-btn>
+            <v-btn variant="outlined" color="error" @click="isOrderMode=false">Cancel</v-btn>
+          </div>
+        </div>
+        <div class="box-content">
+          <div class="item-wrapper">
+            <div class="item" v-for="set in programPartItemSetList" :key="set.id">
+              <span class="number">{{ set.order }}</span>
+              <span class="text">{{ set.description }}</span>
+              <div class="buttons">
+                <v-btn variant="outlined" @click="setOrderUp(set.id)"><v-icon class="text" size="x-large" icon="mdi-menu-up"></v-icon></v-btn>
+                <v-btn variant="outlined" @click="setOrderDown(set.id)"><v-icon class="text" size="x-large" icon="mdi-menu-down"></v-icon></v-btn>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -29,16 +51,21 @@
         <div class="box-header">
           <p class="title">Set Detail</p>
           <div class="buttons">
-            <!-- <v-btn v-show="selectedPart.id" @click="showAddProgramPartItem = true">Add</v-btn> -->
+            <v-btn v-show="selectedSet.id" @click="saveSetDetail">Save</v-btn>
           </div>
         </div>
         <div class="box-content">
-          <!-- <div v-if="!selectedPart.id" class="item-wrapper">
+          <div v-if="!selectedSet.id" class="item-wrapper">
             Select Set.
           </div>
           <div v-else class="item-wrapper">
-            Set information
-          </div> -->
+            <v-text-field v-model="selectedSet.description" label="description"></v-text-field>
+            <v-text-field type="number" label="count" v-model="selectedSet.count"></v-text-field>
+            <v-text-field type="number" label="rest time" v-model="selectedSet.restTime"></v-text-field>
+            <v-text-field :readonly=true type="text" label="created date" v-model="selectedSet.createdDate"></v-text-field>
+            <v-text-field :readonly=true type="text" label="modified date" v-model="selectedSet.modifiedDate"></v-text-field>
+            <v-textarea label="memo" v-model="selectedSet.memo"></v-textarea>
+          </div>
         </div>
       </div>
     </template>
@@ -78,7 +105,7 @@ const props = defineProps ({
   itemId: Number,
 });
 
-const title = computed(() => 'Item Sets > ' + programPartItem.value.name);
+const title = computed(() => programPartItem.value.name + ' > Item Sets');
 
 const showProgramPartItemSetAdd = ref(false);
 
@@ -92,12 +119,90 @@ const selectedSet = ref ({});
 
 const isOrderMode = ref(false);
 
+watch(
+  isOrderMode, (value) => {
+    if (programPartItem.value.id && !value) {
+      getProgramPartItemSetList()
+    }
+  },
+  { immediate: true }
+);
+
+const saveSetOrder = async () => {
+  store.commit('setLoading', true);
+  await axios.put(`/api/workout-programs/${props.programId}/parts/${props.partId}/items/${props.itemId}/sets`, programPartItemSetList.value)
+  .then(response => {
+    isOrderMode.value = false;
+  })
+  .catch((error) => alert('수정 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const setOrderUp = (setId) => {
+  const tempSets = JSON.parse(JSON.stringify(programPartItemSetList.value));
+  const setIndex = tempSets.findIndex(set => set.id == setId);
+  if (setIndex == 0) {
+    return;
+  }
+  const prevOrder = tempSets[setIndex].order;
+  tempSets[setIndex].order = tempSets[setIndex - 1].order;
+  tempSets[setIndex - 1].order = prevOrder;
+
+  tempSets.sort((item1, item2) => item1.order - item2.order);
+
+  programPartItemSetList.value = tempSets;
+}
+
+const setOrderDown = (setId) => {
+
+  const tempSets = JSON.parse(JSON.stringify(programPartItemSetList.value));
+  const setIndex = tempSets.findIndex(set => set.id == setId);
+  if (setIndex == (tempSets.length - 1)) {
+    return;
+  }
+  const prevOrder = tempSets[setIndex].order;
+  tempSets[setIndex].order = tempSets[setIndex + 1].order;
+  tempSets[setIndex + 1].order = prevOrder;
+
+  tempSets.sort((item1, item2) => item1.order - item2.order);
+
+  programPartItemSetList.value = tempSets;
+  
+}
+
+const deleteSet = async (setId) => {
+  if (!confirm('Delete it?')) {
+    return;
+  }
+  store.commit('setLoading', true);
+  await axios.delete(`/api/workout-programs/${props.programId}/parts/${props.partId}/items/${props.itemId}/sets/${setId}`)
+  .then(response => {
+    selectedSet.value = {};
+    getProgramPartItemSetList();
+  })
+  .catch((error) => alert('수정 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
+const saveSetDetail = async () => {
+  if (!confirm('Save it?')) {
+    return;
+  }
+  store.commit('setLoading', true);
+  await axios.put(`/api/workout-programs/${props.programId}/parts/${props.partId}/items/${props.itemId}/sets/${selectedSet.value.id}`, selectedSet.value)
+  .then(response => {
+    getProgramPartItemSetList();
+  })
+  .catch((error) => alert('수정 실패!'))
+  .finally(() => store.commit('setLoading', false));
+}
+
 const selectSet = (set) => {
   if (selectedSet.value.id == set.id) {
     return;
   }
-  // getProgramPartItemList(part.id);
-  selectedSet.value = set;
+  const copy = { ...set };
+  selectedSet.value = copy;
   isOrderMode.value = false;
 };
 
@@ -129,6 +234,12 @@ const getProgramPartItemSetList = async () => {
       name: response.data.name,
     };
     programPartItemSetList.value = response.data.WorkoutProgramPartItemSets;
+    if (selectedSet.value.id) {
+      const index = programPartItemSetList.value.findIndex(item => item.id == selectedSet.value.id);
+      const set = programPartItemSetList.value[index];
+      const copy = { ...set };
+      selectedSet.value = copy;
+    }
   })
   .catch((error) => {
     console.error(error)
@@ -182,12 +293,22 @@ onMounted(() =>   init());
           border: solid 1px black;
         }
 
-        .text {
+        .number {
+          flex: 1;
           margin: auto 0;
+          width: 2rem;
+          text-align: left;
+        }
+        .text {
+          flex: 2;
+          margin: auto 0;
+          text-align: center;
         }
 
         .buttons {
+          flex: 1;
           margin: auto 0;
+          text-align: right;
 
           button {
             padding: 0;
