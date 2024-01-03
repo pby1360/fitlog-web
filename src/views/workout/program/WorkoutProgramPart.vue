@@ -179,7 +179,7 @@ const props = defineProps ({
   programId: Number
 });
 
-const title = computed(() => 'Program Parts > ' + program.value.name);
+const title = computed(() => program.value.name + ' > Program Parts');
 
 let comboPartList = [];
 let comboItemList = ref([]);
