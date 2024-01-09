@@ -53,8 +53,12 @@ const items = [
   },
   {
     title: 'Space',
-    value: '/workout-space',
+    value: '/program-selection',
   }
+  // {
+  //   title: 'Space',
+  //   value: '/workout-space',
+  // }
 ];
 
 const logout = () => {

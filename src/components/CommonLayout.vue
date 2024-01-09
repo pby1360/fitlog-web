@@ -6,14 +6,19 @@
         <slot name="buttons"></slot>
       </div>
     </div>
-    <div v-if="!double" class="box">
-      <slot name="box"></slot>
-    </div>
-    <div v-else class="box-wrapper">
+    <div v-if="double" class="box-wrapper">
       <div class="box">
         <slot name="box1"></slot>
       </div>
-      <div class="box"><slot name="box2"></slot></div>
+      <div class="box">
+        <slot name="box2"></slot>
+      </div>
+    </div>
+    <div v-else-if="custom" class="box-wrapper">
+      <slot name="box"></slot>
+    </div>
+    <div v-else class="box">
+      <slot name="box"></slot>
     </div>
   </div>
 </template>
@@ -23,7 +28,8 @@ import { onMounted } from 'vue';
 
 const props = defineProps ({
   title: String,
-  double: Boolean
+  double: Boolean,
+  custom: Boolean
 })
 
 onMounted(() => {})
