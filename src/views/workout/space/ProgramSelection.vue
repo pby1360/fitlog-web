@@ -6,7 +6,15 @@
       <v-btn class="title-button">Complete</v-btn>
     </template>
     <template #box>
-      test
+      <div v-if="selectedProgram.id">
+        <div v-for="part in partList" :key="part.id">
+          <div>{{ part.id }} {{ part.workoutPartName }}</div>
+          <div></div>
+        </div>
+      </div>
+      <div v-else>
+        <p>Program을 선택하세요.</p>
+      </div>
     </template>
   </CommonLayout>
   <v-dialog
@@ -59,20 +67,35 @@ const getProgramList = async () => {
 /* part */
 
 const partList = ref([]);
-const getPartList = () => {};
+const getPartList = async (workoutProgramId) => {
+  await axios.get(`/api/workout-programs/${workoutProgramId}/parts`)
+  .then(response => {
+    const program = response.data;
+    selectedProgram.value = {
+      id: program.id,
+      name: program.name,
+      description: program.description
+    }
+    partList.value = response.data.workoutProgramPartList;
+  }).catch(error => {
+    console.error(error)
+    alert('load failed!');
+  });
+};
 
 
 /* program */
 
 const showProgramSelection = ref(false);
 const tempSeletedProgram = ref();
-const seletedProgram = ref();
+const selectedProgram = ref({});
 const programList = ref([]);
 
 const selectProgram = () => {
-  seletedProgram.value = { ... tempSeletedProgram.value};
+  const workoutProgramId = tempSeletedProgram.value;
   tempSeletedProgram.value = null;
   showProgramSelection.value = false;
+  getPartList(workoutProgramId);
 }
 
 
