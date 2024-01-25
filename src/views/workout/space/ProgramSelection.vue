@@ -6,10 +6,15 @@
       <v-btn class="title-button">Complete</v-btn>
     </template>
     <template #box>
-      <div v-if="selectedProgram.id">
-        <div v-for="part in partList" :key="part.id">
-          <div>{{ part.id }} {{ part.workoutPartName }}</div>
-          <div></div>
+      <div class="program" v-if="selectedProgram.id">
+        <div class="part-list" v-for="part in partList" :key="part.id">
+          <div class="part">{{ part.workoutPartName }}</div>
+          <div class="item-list" v-if="part.items.length > 0">
+            <div class="item" v-for="item in part.items" :key="item.id">{{ item.name }}</div>
+          </div>
+          <div class="item-list" v-else>
+            No items.
+          </div>
         </div>
       </div>
       <div v-else>
@@ -68,7 +73,7 @@ const getProgramList = async () => {
 
 const partList = ref([]);
 const getPartList = async (workoutProgramId) => {
-  await axios.get(`/api/workout-programs/${workoutProgramId}/parts`)
+  await axios.get(`/api/workout-programs/${workoutProgramId}/parts?include=item`)
   .then(response => {
     const program = response.data;
     selectedProgram.value = {
@@ -108,4 +113,55 @@ const selectProgram = () => {
   margin-left: 0.2rem;
   width: 7.5rem;
 }
+.program {
+  display: flex;
+  flex-flow: column;
+  gap: 0.25rem;
+  width: 100%;
+  .part-list {
+    
+    .part {
+      position: relative;
+      padding: 0 0.5rem;
+      background-color: #f9f9f9;
+      border: solid 1px #c8c8c8;
+      border-radius: 5px;
+      height: 3rem;
+      display: flex;
+      justify-content: space-between;
+
+      &:hover {
+        border: solid 1px black;
+      }
+    }
+    .item-list {
+        margin-top: -0.25rem;
+        padding: 0.75rem 0.5rem 0.5rem;
+        background-color: #e8e8e8;
+        border: solid 1px #c8c8c8;
+        border-top-left-radius: 0px;
+        border-top-right-radius: 0px;
+        border-bottom-left-radius: 5px;
+        border-bottom-right-radius: 5px;
+      .item {
+
+        padding: 0 0.5rem;
+        background-color: #f9f9f9;
+        border: solid 1px #c8c8c8;
+        border-radius: 5px;
+        height: 3rem;
+        display: flex;
+        justify-content: space-between;
+
+        &:hover {
+          border: solid 1px black;
+        }
+
+      }
+    }
+  }
+
+}
+
+
 </style>
