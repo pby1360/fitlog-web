@@ -1,33 +1,35 @@
 <template>
   <CommonLayout title="Select Program" :custom="true">
     <template #buttons>
-      <v-btn @click="showProgramSelection = true" class="title-button">Programs</v-btn>
-      <v-btn class="title-button">Reset</v-btn>
-      <v-btn class="title-button">Complete</v-btn>
+      <v-btn @click="showProgramSelection = true" class="title-button">Program</v-btn>
+      <v-btn @click="clearProgram" class="title-button">Clear</v-btn>
+      <v-btn @click="saveProgram" class="title-button">Complete</v-btn>
+      <!-- <v-btn class="title-button">Expand</v-btn>
+      <v-btn class="title-button">Collapse</v-btn> -->
     </template>
     <template #box>
       <div class="program" v-if="selectedProgram.id">
-        <div class="part-list" v-for="part in partList" :key="part.id">
-          <div class="part">
+        <div class="part-wrapper" v-for="part in partList" :key="part.id">
+          <div class="part"  @click="togglePart(part.id)">
             <span class="text">{{ part.workoutPartName }}</span>
             <div class="buttons">
-              <v-btn variant="outlined" size="x-small" icon="mdi-menu-up"></v-btn>
-              <v-btn variant="outlined" size="x-small" icon="mdi-menu-down"></v-btn>
-              <v-btn variant="outlined" color="green" size="x-small" icon="mdi-plus" @click="getItemList(part.id, part.workoutPartId)"></v-btn>
-              <v-btn variant="outlined" color="red" size="x-small" icon="mdi-delete-outline"></v-btn>
+              <v-btn @click.stop="upPartOrder(part.id)" variant="outlined" size="x-small" icon="mdi-menu-up"></v-btn>
+              <v-btn @click.stop="downPartOrder(part.id)" variant="outlined" size="x-small" icon="mdi-menu-down"></v-btn>
+              <v-btn @click.stop="getItemList(part.id, part.workoutPartId)" variant="outlined" color="green" size="x-small" icon="mdi-plus"></v-btn>
+              <v-btn @click.stop="removePart(part.id)" variant="outlined" color="red" size="x-small" icon="mdi-delete-outline"></v-btn>
             </div>
           </div>
-          <div class="item-list" v-if="part.items.length > 0">
+          <div class="item-list" v-show="part.items.length > 0 && part.isOpen">
             <div class="item" v-for="item in part.items" :key="item.id">
               <span class="text">{{ item.name }}</span>
               <div class="buttons">
-                <v-btn variant="outlined" size="x-small" icon="mdi-menu-up"></v-btn>
-                <v-btn variant="outlined" size="x-small" icon="mdi-menu-down"></v-btn>
-                <v-btn variant="outlined" color="red" size="x-small" icon="mdi-delete-outline"></v-btn>
+                <v-btn @click.stop="upItemOrder(part.id, item.id)" variant="outlined" size="x-small" icon="mdi-menu-up"></v-btn>
+                <v-btn @click.stop="downItemOrder(part.id, item.id)" variant="outlined" size="x-small" icon="mdi-menu-down"></v-btn>
+                <v-btn @click.stop="removeItem(part.id, item.id)" variant="outlined" color="red" size="x-small" icon="mdi-delete-outline"></v-btn>
               </div>
             </div>
           </div>
-          <div class="item-list" v-else>
+          <div class="item-list" v-show="part.items.length == 0 &&  part.isOpen">
             No items.
           </div>
         </div>
@@ -118,12 +120,69 @@ const getPartList = async (workoutProgramId) => {
       name: program.name,
       description: program.description
     }
-    partList.value = response.data.workoutProgramPartList;
+    let tempPartList = response.data.workoutProgramPartList;
+    tempPartList.forEach((part, index) => {
+      part.isOpen = false;
+      part.order = index + 1;
+    });
+    partList.value = tempPartList;
   }).catch(error => {
     console.error(error)
     alert('load failed!');
   });
 };
+
+const togglePart = (partId) => {
+  const index = partList.value.findIndex(part => part.id == partId);
+  if (index < 0) {
+    return;
+  }
+  partList.value[index].isOpen = !partList.value[index].isOpen;
+};
+
+const upPartOrder = (partId) => {
+  const tempParts = JSON.parse(JSON.stringify(partList.value));
+  const partIndex = tempParts.findIndex(part => part.id == partId);
+  if (partIndex == 0) {
+    return;
+  }
+  const prevOrder = tempParts[partIndex].order;
+  tempParts[partIndex].order = tempParts[partIndex - 1].order;
+  tempParts[partIndex - 1].order = prevOrder;
+
+  tempParts.sort((item1, item2) => item1.order - item2.order);
+
+  partList.value = tempParts;
+}
+
+const downPartOrder = (partId) => {
+  const tempParts = JSON.parse(JSON.stringify(partList.value));
+  const partIndex = tempParts.findIndex(part => part.id == partId);
+  if (partIndex == (tempParts.length -1)) {
+    return;
+  }
+  const prevOrder = tempParts[partIndex].order;
+  tempParts[partIndex].order = tempParts[partIndex + 1].order;
+  tempParts[partIndex + 1].order = prevOrder;
+
+  tempParts.sort((item1, item2) => item1.order - item2.order);
+
+  partList.value = tempParts;
+}
+
+const removePart = (partId) => {
+  const tempParts = JSON.parse(JSON.stringify(partList.value));
+  const partIndex = tempParts.findIndex(part => part.id == partId);
+  
+  if (partIndex < 0) {
+    return;
+  }
+
+  tempParts.splice(partIndex, 1);
+  tempParts.forEach((part, index) => part.order = index + 1);
+
+  partList.value = tempParts;
+}
 
 
 /* program */
@@ -138,6 +197,24 @@ const selectProgram = () => {
   tempSeletedProgram.value = null;
   showProgramSelection.value = false;
   getPartList(workoutProgramId);
+}
+
+const clearProgram = () => {
+  selectedProgram.value ={};
+  partList.value = [];
+}
+
+const saveProgram = async () => {
+  // store.commit('setLoading', true);
+  // const program = {
+  //   id: selectedProgram.value.id,
+  //   parts: partList,
+  // }
+  // await axios.post(`/api/workout-space`, program)
+  // .then(response => {
+  // })
+  // .catch((error) => alert('저장 실패!'))
+  // .finally(() => store.commit('setLoading', false));
 }
 
 /* item */
@@ -165,15 +242,77 @@ let itemList = [];
 
 const selectItem = () => {
   const itemIndex = itemList.findIndex(item => item.id == tempSeletedItem.value);
+  const partIndex = partList.value.findIndex(part => part.id == selectedProgramPartId);
+
   const selectedItem = {
     workoutPartItemId: itemList[itemIndex].id,
     name: itemList[itemIndex].name,
+    order: partList.value[partIndex].items.length + 1
   }
-  const partIndex = partList.value.findIndex(part => part.id == selectedProgramPartId);
+
   partList.value[partIndex].items.push(selectedItem);
   tempSeletedItem.value = null;
   showItemSelection.value = false;
-  // getPartList(itemId);
+}
+
+const upItemOrder = (partId, itemId) => {
+  const partIndex = partList.value.findIndex(part => part.id == partId);
+  if (partIndex < 0) {
+    return;
+  }
+  const tempItems = JSON.parse(JSON.stringify(partList.value[partIndex].items));
+
+  const itemIndex = tempItems.findIndex(item => item.id == itemId);
+  if (itemIndex == 0) {
+    return;
+  }
+
+  const prevOrder = tempItems[itemIndex].order;
+  tempItems[itemIndex].order = tempItems[itemIndex - 1].order;
+  tempItems[itemIndex - 1].order = prevOrder;
+
+  tempItems.sort((item1, item2) => item1.order - item2.order);
+
+  partList.value[partIndex].items = tempItems;
+}
+
+const downItemOrder = (partId, itemId) => {
+  const partIndex = partList.value.findIndex(part => part.id == partId);
+  if (partIndex < 0) {
+    return;
+  }
+  const tempItems = JSON.parse(JSON.stringify(partList.value[partIndex].items));
+
+  const itemIndex = tempItems.findIndex(item => item.id == itemId);
+  if (itemIndex == (tempItems.length -1)) {
+    return;
+  }
+
+  const prevOrder = tempItems[itemIndex].order;
+  tempItems[itemIndex].order = tempItems[itemIndex + 1].order;
+  tempItems[itemIndex + 1].order = prevOrder;
+
+  tempItems.sort((item1, item2) => item1.order - item2.order);
+
+  partList.value[partIndex].items = tempItems;
+}
+
+const removeItem = (partId, itemId) => {
+  const partIndex = partList.value.findIndex(part => part.id == partId);
+  if (partIndex < 0) {
+    return;
+  }
+
+  const tempItems = JSON.parse(JSON.stringify(partList.value[partIndex].items));
+  const itemIndex = tempItems.findIndex(item => item.id == itemId);
+  if (itemIndex < 0) {
+    return;
+  }
+
+  tempItems.splice(itemIndex, 1);
+  tempItems.forEach((part, index) => part.order = index + 1);
+
+  partList.value[partIndex].items = tempItems;
 }
 
 </script>
@@ -188,7 +327,7 @@ const selectItem = () => {
   flex-flow: column;
   gap: 0.25rem;
   width: 100%;
-  .part-list {
+  .part-wrapper {
     
     .part {
       position: relative;
@@ -199,6 +338,10 @@ const selectItem = () => {
       height: 3rem;
       display: flex;
       justify-content: space-between;
+
+      &:hover {
+        cursor: pointer;
+      }
 
       .text {
         margin: auto 0;
