@@ -87,4 +87,17 @@ const router = createRouter({
   ]
 })
 
+router.beforeEach((to, from) => {
+  if (to.name == 'programSelection') {
+
+    const workoutStr = localStorage.getItem('workout');
+    if (workoutStr) {
+      const workout = JSON.parse(workoutStr);
+      if (workout.id) {
+        return '/workout-space';
+      }
+    }
+  }
+})
+
 export default router

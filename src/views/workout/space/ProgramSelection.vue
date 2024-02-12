@@ -1,9 +1,9 @@
 <template>
   <CommonLayout title="Select Program" :custom="true">
     <template #buttons>
-      <v-btn @click="showProgramSelection = true" class="title-button">Program</v-btn>
-      <v-btn @click="clearProgram" class="title-button">Clear</v-btn>
-      <v-btn @click="saveProgram" class="title-button">Complete</v-btn>
+      <v-btn variant="outlined" @click="showProgramSelection = true" class="title-button">Program</v-btn>
+      <v-btn variant="outlined" color="error" @click="clearProgram" class="title-button">Clear</v-btn>
+      <v-btn variant="outlined" color="success" @click="saveProgram" class="title-button">Complete</v-btn>
       <!-- <v-btn class="title-button">Expand</v-btn>
       <v-btn class="title-button">Collapse</v-btn> -->
     </template>
@@ -85,6 +85,7 @@
 import CommonLayout from '@/components/CommonLayout.vue';
 import { getCurrentInstance, onMounted, ref } from 'vue';
 import { useStore } from 'vuex';
+import router from '../../../router';
 
 const axios = getCurrentInstance().proxy.axios;
 const store = useStore();
@@ -205,16 +206,56 @@ const clearProgram = () => {
 }
 
 const saveProgram = async () => {
-  // store.commit('setLoading', true);
-  // const program = {
-  //   id: selectedProgram.value.id,
-  //   parts: partList,
-  // }
-  // await axios.post(`/api/workout-space`, program)
-  // .then(response => {
-  // })
-  // .catch((error) => alert('저장 실패!'))
-  // .finally(() => store.commit('setLoading', false));
+  if (!selectedProgram.value.id) {
+    alert('프로그램을 선택하세요.');
+    return;
+  }
+
+  store.commit('setLoading', true);
+  
+  const workoutRoutinePartList = partList.value.map(part => {
+    
+    const workoutRoutineItemList = part.items.map(item => {
+      const routineItem = {
+        workoutProgramPartItemId: item.id,
+        workoutPartItemId: item.workoutPartItemId,
+        name: item.name,
+        order: item.order,
+        description: item.description
+      }
+      return routineItem;
+    })
+
+    const routinePart = {
+        workoutPartId: part.workoutPartId,
+        name: part.workoutPartName,
+        order: part.order,
+        description: part.description,
+        workoutRoutineItemList: workoutRoutineItemList
+      }
+      return routinePart;
+  });
+
+  const workoutRoutine = {
+    userId: user.id,
+    workoutProgramId: selectedProgram.value.id,
+    name: selectedProgram.value.name,
+    description: selectedProgram.value.description,
+    workoutRoutinePartList: workoutRoutinePartList
+  };
+
+  await axios.post(`/api/workout-routines`, workoutRoutine)
+  .then(response => {
+    const workout = {
+      id: response.data.id,
+      name: response.data.name,
+    }
+    localStorage.setItem('workout', JSON.stringify(workout));
+    alert('저장 성공');
+    router.replace('/workout-space');
+  })
+  .catch((error) => alert('저장 실패!'))
+  .finally(() => store.commit('setLoading', false));
 }
 
 /* item */
@@ -359,7 +400,7 @@ const removeItem = (partId, itemId) => {
 
         button {
           margin: auto 0;
-      }
+        }
 
       }
 
