@@ -69,14 +69,35 @@ const router = createRouter({
       component: () => import('@/views/workout/program/workoutProgramPartItemSet.vue')
     },
     {
+      path: '/program-selection',
+      name: 'programSelection',
+      meta: {
+        loginRequired: true,
+      },
+      component: () => import('@/views/workout/space/programSelection.vue')
+    },
+    {
       path: '/workout-space',
       name: 'workoutSpace',
       meta: {
         loginRequired: true,
       },
-      component: () => import('@/views/workout/space/WorkoutSpace.vue')
+      component: () => import('@/views/workout/space/workoutSpace.vue')
     }
   ]
+})
+
+router.beforeEach((to, from) => {
+  if (to.name == 'programSelection') {
+
+    const workoutStr = localStorage.getItem('workout');
+    if (workoutStr) {
+      const workout = JSON.parse(workoutStr);
+      if (workout.id) {
+        return '/workout-space';
+      }
+    }
+  }
 })
 
 export default router
