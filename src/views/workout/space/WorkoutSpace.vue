@@ -8,7 +8,7 @@
             <p class="text">{{ routineInfo.statusName }}</p>
           </div>
           <div class="time-wrapper">
-            <p class="text">isTotalTimeStarted at</p>
+            <p class="text">Started at</p>
             <p class="text">{{ routineInfo.programStartedAt}}</p>
           </div>
           <div class="time-wrapper">
@@ -21,7 +21,8 @@
         </div>
         <div class="buttons">
           <v-btn color="#8995FF" :disabled="routineInfo.status != '10' && routineInfo.status != '40'" @click="startRoutine(routineInfo.routineId)">start</v-btn>
-          <v-btn :disabled="routineInfo.status != '20'" @click="finishRoutine(routineInfo.routineId)">finish</v-btn>
+          <v-btn color="green" :disabled="routineInfo.status != '20'" @click="finishRoutine(routineInfo.routineId)">finish</v-btn>
+          <v-btn :disabled="routineInfo.status != '40'" @click="clearRoutine(routineInfo.routineId)">clear</v-btn>
         </div>
       </div>
       <div class="space-body first">
@@ -35,7 +36,7 @@
                 <p class="item-name">{{ routineInfo.itemName }}</p>
               </div>
               <div class="buttons">
-                <v-btn variant="text" color="green">next</v-btn>
+                <v-btn @click="nextItem()" variant="text" color="green">next</v-btn>
               </div>
             </div>
           </div>
@@ -97,7 +98,7 @@
                     v-model="partPercentage"
                     color="info"
                   >
-                  <strong>{{ Math.ceil(chartInfo.partCount/chartInfo.totalPartCount) }}%</strong>
+                  <strong>{{ Math.ceil(partPercentage) }}%</strong>
                   </v-progress-linear>
                 </div>
                 <div class="bar">
@@ -110,7 +111,7 @@
                     v-model="itemPercentage"
                     color="info"
                   >
-                    <strong>{{ Math.ceil(chartInfo.itemCount/chartInfo.totalItemCount) }}%</strong>
+                    <strong>{{ Math.ceil(itemPercentage) }}%</strong>
                   </v-progress-linear>
                 </div>
                 <div class="bar">
@@ -123,7 +124,7 @@
                     v-model="setPercentage"
                     color="info"
                   >
-                    <strong>{{ Math.ceil(chartInfo.setCount/chartInfo.totalSetCount) }}%</strong>
+                    <strong>{{ Math.ceil(setPercentage) }}%</strong>
                   </v-progress-linear>
                 </div>
               </div>
@@ -193,9 +194,9 @@ let isRestTimeRunning = false;
 let isRestTimeStarted = null;
 let currentRestTime = 0;
 
-const partPercentage = computed(() => (chartInfo.value.partCount/chartInfo.value.totalPartCount));
-const itemPercentage = computed(() => (chartInfo.value.itemCount/chartInfo.value.totalItemCount));
-const setPercentage = computed(() => (chartInfo.value.setCount/chartInfo.value.totalSetCount));
+const partPercentage = computed(() => (chartInfo.value.partCount/chartInfo.value.totalPartCount)*100);
+const itemPercentage = computed(() => (chartInfo.value.itemCount/chartInfo.value.totalItemCount)*100);
+const setPercentage = computed(() => (chartInfo.value.setCount/chartInfo.value.totalSetCount)*100);
 
 const totalTime = ref('00:00:00');
 const itemTime = ref('00:00:00');
@@ -272,6 +273,77 @@ const finishRoutine = async (id) => {
   .then(response => {
     getWorkoutRoutine(id);
     stopTotalTime();
+    stopItemTime();
+    stopRestTime();
+  }).catch((error) => {
+    console.error(error);
+    alert('요청 실패!');
+  });
+}
+
+const clearRoutine = async (id) => {
+  await axios.post(`/api/workout-routines/${id}/clear`)
+  .then(response => {
+    getWorkoutRoutine(id);
+    stopTotalTime();
+    stopItemTime();
+    stopRestTime();
+    totalTime.value = "00:00:00";
+    itemTime.value = "00:00:00";
+    restTime.value = "00:00:00";
+  }).catch((error) => {
+    console.error(error);
+    alert('요청 실패!');
+  });
+}
+
+const nextItem = async () => {
+  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/finish`)
+  .then(response => {
+    stopItemTime();
+    stopRestTime();
+    // totalTime.value = "00:00:00";
+    itemTime.value = "00:00:00";
+    restTime.value = "00:00:00";
+    getWorkoutRoutine(routineInfo.value.routineId);
+    // stopTotalTime();
+  }).catch((error) => {
+    console.error(error);
+    alert('요청 실패!');
+  });
+}
+
+const setComplete = async () => {
+  if (counterInfo.value.currentCount == 0) return;
+  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/set`, counterInfo.value.currentCount)
+  .then(response => {
+    stopRestTime();
+    restTime.value = "00:00:00";
+    getWorkoutRoutine(routineInfo.value.routineId);
+    // startTotalTime();
+  }).catch((error) => {
+    console.error(error);
+    alert('요청 실패!');
+  });
+}
+
+const clearSet = async () => {
+  if (counterInfo.value.currentTotalCount == 0) return;
+  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/clear`)
+  .then(response => {
+    getWorkoutRoutine(routineInfo.value.routineId);
+    // startTotalTime();
+  }).catch((error) => {
+    console.error(error);
+    alert('요청 실패!');
+  });
+}
+
+const startItem = async () => {
+  // if (counterInfo.value.currentTotalCount == 0) return;
+  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/start`)
+  .then(response => {
+    getWorkoutRoutine(routineInfo.value.routineId);
   }).catch((error) => {
     console.error(error);
     alert('요청 실패!');
@@ -404,42 +476,6 @@ const decreaseCount = () => {
   }
   counterInfo.value.currentCount -= 1;
 }
-
-const setComplete = async () => {
-  if (counterInfo.value.currentCount == 0) return;
-  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/set`, counterInfo.value.currentCount)
-  .then(response => {
-    getWorkoutRoutine(routineInfo.value.routineId);
-    // startTotalTime();
-  }).catch((error) => {
-    console.error(error);
-    alert('요청 실패!');
-  });
-}
-
-const clearSet = async () => {
-  if (counterInfo.value.currentTotalCount == 0) return;
-  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/clear`)
-  .then(response => {
-    getWorkoutRoutine(routineInfo.value.routineId);
-    // startTotalTime();
-  }).catch((error) => {
-    console.error(error);
-    alert('요청 실패!');
-  });
-}
-
-const startItem = async () => {
-  // if (counterInfo.value.currentTotalCount == 0) return;
-  await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/start`)
-  .then(response => {
-    getWorkoutRoutine(routineInfo.value.routineId);
-  }).catch((error) => {
-    console.error(error);
-    alert('요청 실패!');
-  });
-}
-
 </script>
 
 <style lang="scss" scoped>
