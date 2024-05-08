@@ -53,7 +53,7 @@ const items = [
   },
   {
     title: 'Space',
-    value: '/program-selection',
+    value: '/workout-list',
   }
   // {
   //   title: 'Space',

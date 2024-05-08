@@ -12,12 +12,14 @@
             <p class="text">{{ routineInfo.programStartedAt}}</p>
           </div>
           <div class="time-wrapper">
-            <p class="text">{{ routineInfo.programDescription }}</p>
+            <p class="text">Finished at</p>
+            <p class="text">{{ routineInfo.programFinishedAt}}</p>
           </div>
         </div>
         <div class="description">
           <p class="text">Program</p>
           <p class="program-name">{{ routineInfo.programName }}</p>
+          <p class="text">{{ routineInfo.programDescription }}</p>
         </div>
         <div class="buttons">
           <v-btn color="#8995FF" :disabled="routineInfo.status != '10' && routineInfo.status != '40'" @click="startRoutine(routineInfo.routineId)">start</v-btn>
@@ -36,7 +38,7 @@
                 <p class="item-name">{{ routineInfo.itemName }}</p>
               </div>
               <div class="buttons">
-                <v-btn @click="nextItem()" variant="text" color="green">next</v-btn>
+                <v-btn @click="nextItem()" :disabled="routineInfo.status == '40'" active variant="text" color="green">next</v-btn>
               </div>
             </div>
           </div>
@@ -75,10 +77,10 @@
             </div>
           </div>
           <div class="space-body-box-buttons">
-            <div><v-btn @click="increaseCount" class="side-button" icon="mdi-plus"></v-btn></div>
-            <div><v-btn @click="decreaseCount" class="side-button" icon="mdi-minus"></v-btn></div>
-            <div><v-btn @click="setComplete" class="side-button" text="Set" icon></v-btn></div>
-            <div><v-btn @click="clearSet" class="side-button" text="Clear" icon></v-btn></div>
+            <div><v-btn @click="increaseCount" :disabled="routineInfo.status == '40'" class="side-button" icon="mdi-plus"></v-btn></div>
+            <div><v-btn @click="decreaseCount" :disabled="routineInfo.status == '40'" class="side-button" icon="mdi-minus"></v-btn></div>
+            <div><v-btn @click="setComplete" :disabled="routineInfo.status == '40'" class="side-button" text="Set" icon></v-btn></div>
+            <div><v-btn @click="clearSet" :disabled="routineInfo.status == '40'" class="side-button" text="Clear" icon></v-btn></div>
           </div>
         </div>
       </div>
@@ -159,10 +161,10 @@
             </div>
           </div>
           <div class="space-body-box-buttons">
-            <div><v-btn @click="startItem" class="side-button" icon text="start"></v-btn></div>
-            <div><v-btn class="side-button" icon text="stop"></v-btn></div>
-            <div><v-btn @click="startRestTime" class="side-button" icon text="Rest"></v-btn></div>
-            <div><v-btn class="side-button" icon text="Clear"></v-btn></div>
+            <div><v-btn @click="startItem" :disabled="routineInfo.status == '40'" class="side-button" icon text="start"></v-btn></div>
+            <div><v-btn class="side-button" :disabled="routineInfo.status == '40'" icon text="stop"></v-btn></div>
+            <div><v-btn @click="startRestTime" :disabled="routineInfo.status == '40'" class="side-button" icon text="Rest"></v-btn></div>
+            <div><v-btn class="side-button" :disabled="routineInfo.status == '40'" icon text="Clear"></v-btn></div>
           </div>
         </div>
       </div>
