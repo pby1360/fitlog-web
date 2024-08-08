@@ -23,7 +23,7 @@
           <span class="text">{{ routine.finishedAt }}</span>
           <span class="buttons">
             <v-btn @click="moveWorkoutSpace(routine)">이동</v-btn>
-            <v-btn>삭제</v-btn>
+            <v-btn @click="deleteWorkoutRoutine(routine.id)">삭제</v-btn>
           </span>
         </div>
       </div>
@@ -60,17 +60,35 @@ const init = () => {
   getProgramList();
 };
 
-const getProgramList = async () => {  
+const getProgramList = async () => {
+  store.commit('setLoading', true);
   await axios.get(`/api/workout-routines/users/${user.id}`)
   .then(response => {
     routineList.value = response.data;
-  });
+  }).catch((error) => {
+    console.error(error);
+    alert('조회 실패!');
+  }).finally(() => store.commit('setLoading', false));
 }
 
 const moveWorkoutSpace = (routine)  => {
   const workoutStr = JSON.stringify(routine);
   localStorage.setItem('workout', workoutStr);
   router.push('/workout-space');
+}
+
+const deleteWorkoutRoutine = async (id) => {
+  if (!confirm('삭제하시겠습니까?')) {
+    return;
+  }
+  store.commit('setLoading', true);
+  await axios.delete(`/api/workout-routines/${id}`)
+  .then(() => getProgramList())
+  .catch(error => {
+    alert('삭제 실패');
+    console.error(error);
+  })
+  .finally(() => store.commit('setLoading', false));
 }
 
 </script>

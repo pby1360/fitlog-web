@@ -224,11 +224,11 @@ onMounted(() => {
       getWorkoutRoutine(workout.id);
     } else {
       alert('진행중인 프로그램이 없습니다.\n프로그램 선택 후 다시 시도하세요.');
-      router.replace('/program-selection');
+      router.replace('/workout-list');
     }
   } else {
     alert('진행중인 프로그램이 없습니다.\n프로그램 선택 후 다시 시도하세요.');
-    router.replace('/program-selection');
+    router.replace('/workout-list');
   }
 })
 
@@ -255,8 +255,7 @@ const getWorkoutRoutine = async (id) => {
   }).catch((error) => {
     console.error(error);
     alert('조회 실패!');
-  })
-  .finally(() => store.commit('setLoading', false));
+  }).finally(() => store.commit('setLoading', false));
 }
 
 const startRoutine = async (id) => {
@@ -277,9 +276,12 @@ const finishRoutine = async (id) => {
     stopTotalTime();
     stopItemTime();
     stopRestTime();
+    localStorage.removeItem('workout');
   }).catch((error) => {
     console.error(error);
     alert('요청 실패!');
+  }).finally(() => {
+    
   });
 }
 
