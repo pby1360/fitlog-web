@@ -43,7 +43,9 @@ onMounted(() => {
 const checkToken = () => {
   const authStr = localStorage.getItem('auth');
   if (authStr) {
+    console.log('authStr ', authStr);
     const auth = JSON.parse(authStr);
+    console.log('auth.expiredAt ', auth.expiredAt);
     if (auth.expiredAt < new Date().getTime()) {
       if (route.name !== 'home' || route.name !== 'about' || route.name !== 'signIn') {
         localStorage.removeItem('auth');
