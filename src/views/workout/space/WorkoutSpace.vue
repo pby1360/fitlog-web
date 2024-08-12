@@ -161,7 +161,7 @@
             </div>
           </div>
           <div class="space-body-box-buttons">
-            <div><v-btn @click="startItem" :disabled="routineInfo.status == '40'" class="side-button" icon text="start"></v-btn></div>
+            <div><v-btn @click="startItem" :disabled="routineInfo.status == '40' || isItemTimeRunning" class="side-button" icon text="start"></v-btn></div>
             <div><v-btn class="side-button" :disabled="routineInfo.status == '40'" icon text="stop"></v-btn></div>
             <div><v-btn @click="startRestTime" :disabled="routineInfo.status == '40'" class="side-button" icon text="Rest"></v-btn></div>
             <div><v-btn class="side-button" :disabled="routineInfo.status == '40'" icon text="Clear"></v-btn></div>
@@ -344,7 +344,10 @@ const clearSet = async () => {
 }
 
 const startItem = async () => {
-  // if (counterInfo.value.currentTotalCount == 0) return;
+  if (!isTotalTimeRunning) {
+    alert('프로그램을 시작하세요.');
+    return;
+  }
   await axios.post(`/api/workout-routines/${routineInfo.value.routineId}/parts/${routineInfo.value.routinePartId}/items/${routineInfo.value.routineItemId}/start`)
   .then(response => {
     getWorkoutRoutine(routineInfo.value.routineId);
@@ -431,6 +434,14 @@ const setItemTime = () => {
 }
 
 const startRestTime = () => {
+  if (!isTotalTimeRunning) {
+    alert('프로그램을 시작하세요.');
+    return;
+  }
+  if (!isItemTimeRunning) {
+    alert('아이템을 시작하세요.');
+    return;
+  }
   if (isRestTimeRunning) {
     return;
   }
